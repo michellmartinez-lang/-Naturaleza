@@ -1,0 +1,27 @@
+{
+  "id": "floramundi-pwa",
+  "short_name": "FloraMundi",
+  "name": "FloraMundi - Enciclopedia de Floriografía",
+  "description": "Descubre el lenguaje secreto de las flores y encuentra el regalo perfecto.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#faf7f2",
+  "theme_color": "#3d4a3b",
+  "categories": ["lifestyle", "utilities"],
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "type": "image/png",
+      "sizes": "192x192",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-512.png",
+      "type": "image/png",
+      "sizes": "512x512",
+      "purpose": "any maskable"
+    }
+  ]
+}

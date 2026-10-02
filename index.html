@@ -1,0 +1,744 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Floriografía — Enciclopedia de Flores y Significados</title>
+    <meta name="description" content="Guía interactiva de flores, su lenguaje y significado en el mundo.">
+    <meta name="theme-color" content="#90A959">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="Floriografía">
+    
+    <!-- ✅ Referencia al Manifest -->
+    <link rel="manifest" href="manifest.json">
+    
+    <!-- Iconos para iOS -->
+    <link rel="apple-touch-icon" href="icon-192.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="icon-192.png">
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        cream: '#F8F5E9',
+                        sage: '#90A959',
+                        sageLight: '#B5C99A',
+                        pinkSoft: '#F4C2C2',
+                        goldOld: '#D4AF37',
+                        terracota: '#E07A5F',
+                        stoneLight: '#F2EDE4',
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                        serif: ['Georgia', 'Cambria', 'serif'],
+                    },
+                }
+            }
+        }
+    </script>
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .glass {
+                background: rgba(255, 255, 255, 0.65);
+                backdrop-filter: blur(12px);
+                -webkit-backdrop-filter: blur(12px);
+            }
+            .glass-dark {
+                background: rgba(255, 255, 255, 0.85);
+                backdrop-filter: blur(10px);
+                -webkit-backdrop-filter: blur(10px);
+            }
+            .card-shadow {
+                box-shadow: 0 8px 32px rgba(144, 169, 89, 0.12);
+            }
+            .text-shadow-sm {
+                text-shadow: 0 1px 2px rgba(0,0,0,0.1);
+            }
+            .nav-active {
+                color: theme('colors.terracota');
+                border-top: 2px solid theme('colors.terracota');
+            }
+        }
+    </style>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        * {
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #F8F5E9 0%, #F2EDE4 50%, #EDE4D3 100%);
+            min-height: 100vh;
+        }
+        
+        .page {
+            display: none;
+            animation: fadeIn 0.3s ease forwards;
+        }
+        
+        .page.active {
+            display: block;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .flor-card {
+            transition: all 0.3s cubic-bezier(0.2, 0, 0.2, 1);
+        }
+        
+        .flor-card:hover {
+            transform: translateY(-4px);
+        }
+        
+        .modal-enter {
+            animation: modalIn 0.35s cubic-bezier(0.2, 0, 0.2, 1) forwards;
+        }
+        
+        @keyframes modalIn {
+            from { opacity: 0; transform: translateY(20px) scale(0.96); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        
+        .chip {
+            transition: all 0.2s ease;
+        }
+        
+        .chip.active {
+            background-color: #E07A5F;
+            color: white;
+        }
+        
+        .heart-icon {
+            transition: all 0.25s ease;
+        }
+        
+        .heart-icon.saved {
+            color: #E07A5F;
+            transform: scale(1.15);
+        }
+        
+        .install-banner {
+            transform: translateY(100%);
+            transition: transform 0.4s cubic-bezier(0.2, 0, 0.2, 1);
+        }
+        
+        .install-banner.show {
+            transform: translateY(0);
+        }
+    </style>
+</head>
+<body class="font-sans text-gray-800 pb-20">
+    <!-- Cabecera fija -->
+    <header class="sticky top-0 z-40 glass-dark px-4 py-3 border-b border-white/50">
+        <h1 class="font-serif text-[clamp(1.4rem,3vw,1.8rem)] font-bold text-center text-sage">
+            🌸 Floriografía
+        </h1>
+        <p class="text-xs text-center text-gray-500 mt-1" id="page-subtitle">El lenguaje secreto de las flores</p>
+    </header>
+
+    <!-- Página: Inicio / Catálogo -->
+    <section id="page-catalogo" class="page active px-4 py-4">
+        <!-- Buscador -->
+        <div class="mb-5">
+            <div class="relative">
+                <i class="fa fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                <input 
+                    type="text" 
+                    id="buscador" 
+                    placeholder="Buscar flor, sentimiento u ocasión..." 
+                    class="w-full pl-10 pr-4 py-3 rounded-2xl glass card-shadow border border-white/60 focus:outline-none focus:ring-2 focus:ring-sage/30"
+                >
+            </div>
+        </div>
+
+        <!-- Filtros por categoría -->
+        <div class="mb-5 overflow-x-auto pb-2">
+            <div class="flex gap-2 whitespace-nowrap" id="filtros-contenedor">
+                <button class="chip px-3 py-1.5 rounded-full bg-white/70 text-sm" data-categoria="todas">Todas</button>
+                <button class="chip px-3 py-1.5 rounded-full bg-white/70 text-sm" data-categoria="Amor">Amor</button>
+                <button class="chip px-3 py-1.5 rounded-full bg-white/70 text-sm" data-categoria="Amistad">Amistad</button>
+                <button class="chip px-3 py-1.5 rounded-full bg-white/70 text-sm" data-categoria="Condolencias">Condolencias</button>
+                <button class="chip px-3 py-1.5 rounded-full bg-white/70 text-sm" data-categoria="Espiritualidad">Espiritualidad</button>
+                <button class="chip px-3 py-1.5 rounded-full bg-white/70 text-sm" data-categoria="Nacimiento">Nacimiento</button>
+                <button class="chip px-3 py-1.5 rounded-full bg-white/70 text-sm" data-categoria="Agradecimiento">Agradecimiento</button>
+            </div>
+        </div>
+
+        <!-- Lista de flores -->
+        <div id="lista-flores" class="grid gap-4 sm:grid-cols-2">
+        </div>
+        
+        <p id="sin-resultados" class="hidden text-center py-10 text-gray-500">
+            No se encontraron flores con esos términos 🌿
+        </p>
+    </section>
+
+    <!-- Página: Recomendador -->
+    <section id="page-recomendador" class="page px-4 py-6">
+        <div class="glass rounded-3xl p-5 card-shadow border border-white/50 mb-6">
+            <h2 class="font-serif text-xl font-semibold text-sage mb-5 text-center">💐 Recomendador de Flores</h2>
+            
+            <div class="space-y-5">
+                <div>
+                    <label class="block text-sm font-medium mb-2">¿A quién le vas a regalar?</label>
+                    <select id="destinatario" class="w-full p-3 rounded-xl bg-white/70 border border-white/60 focus:outline-none focus:ring-2 focus:ring-sage/30">
+                        <option value="">Selecciona una persona...</option>
+                        <option value="pareja">Pareja o ser amado</option>
+                        <option value="amigo">Amigo/a</option>
+                        <option value="familiar">Familiar</option>
+                        <option value="colega">Compañero/a de trabajo</option>
+                        <option value="persona_especial">Alguien muy especial</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium mb-2">¿Qué emoción deseas transmitir?</label>
+                    <select id="emocion" class="w-full p-3 rounded-xl bg-white/70 border border-white/60 focus:outline-none focus:ring-2 focus:ring-sage/30">
+                        <option value="">Selecciona un sentimiento...</option>
+                        <option value="amor">Amor y pasión</option>
+                        <option value="amistad">Amistad sincera</option>
+                        <option value="agradecimiento">Agradecimiento</option>
+                        <option value="consuelo">Consuelo y paz</option>
+                        <option value="admiracion">Admiración y respeto</option>
+                        <option value="felicidad">Felicidad y alegría</option>
+                        <option value="perdon">Perdón y reconciliación</option>
+                    </select>
+                </div>
+
+                <button id="btn-recomendar" class="w-full py-3 bg-terracota text-white rounded-xl font-medium hover:bg-terracota/90 transition-all active:scale-98">
+                    🌸 Descubrir flores ideales
+                </button>
+            </div>
+        </div>
+
+        <div id="resultados-recomendacion" class="space-y-4"></div>
+    </section>
+
+    <!-- Página: Favoritos -->
+    <section id="page-favoritos" class="page px-4 py-6">
+        <h2 class="font-serif text-xl font-semibold text-sage mb-5 text-center">💜 Mis Flores Favoritas</h2>
+        <div id="lista-favoritos" class="grid gap-4 sm:grid-cols-2"></div>
+        <p id="sin-favoritos" class="text-center py-10 text-gray-500">
+            Aún no tienes flores guardadas ❤️<br>
+            Toca el corazón en cualquier tarjeta para agregarlas.
+        </p>
+    </section>
+
+    <!-- Modal Detalle de Flor -->
+    <div id="modal-flor" class="fixed inset-0 bg-black/40 z-50 hidden items-center justify-center p-4">
+        <div class="glass w-full max-w-md rounded-3xl p-5 card-shadow modal-enter max-h-[85vh] overflow-y-auto">
+            <div class="flex justify-between items-start mb-4">
+                <div>
+                    <h3 id="modal-nombre" class="font-serif text-xl font-bold text-sage"></h3>
+                    <p id="modal-cientifico" class="text-sm text-gray-500 italic"></p>
+                </div>
+                <button id="cerrar-modal" class="text-gray-400 hover:text-gray-600 text-xl">
+                    <i class="fa fa-times"></i>
+                </button>
+            </div>
+            
+            <div class="space-y-4 text-sm">
+                <div>
+                    <h4 class="font-semibold text-terracota mb-1">✨ Significado</h4>
+                    <p id="modal-significado"></p>
+                </div>
+                
+                <div>
+                    <h4 class="font-semibold text-terracota mb-1">🎨 Por color</h4>
+                    <ul id="modal-colores" class="list-disc list-inside space-y-1 text-gray-700"></ul>
+                </div>
+                
+                <div>
+                    <h4 class="font-semibold text-terracota mb-1">📜 Historia y origen</h4>
+                    <p id="modal-historia"></p>
+                </div>
+                
+                <div>
+                    <h4 class="font-semibold text-terracota mb-1">🎁 Ocasiones ideales</h4>
+                    <p id="modal-ocasion"></p>
+                </div>
+                
+                <div>
+                    <h4 class="font-semibold text-terracota mb-1">🌿 Cuidados rápidos</h4>
+                    <p id="modal-cuidados"></p>
+                </div>
+            </div>
+            
+            <button id="favorito-modal" class="mt-5 w-full py-2.5 rounded-xl border border-sage/30 text-sage hover:bg-sage/10 transition-all">
+                <i class="fa fa-heart-o mr-2"></i> Agregar a favoritos
+            </button>
+        </div>
+    </div>
+
+    <!-- Barra de Navegación Inferior -->
+    <nav class="fixed bottom-0 left-0 right-0 glass-dark border-t border-white/60 z-40">
+        <div class="flex justify-around">
+            <button class="nav-btn flex-1 py-3 flex flex-col items-center gap-1 nav-active" data-page="catalogo">
+                <i class="fa fa-leaf text-lg"></i>
+                <span class="text-xs">Catálogo</span>
+            </button>
+            <button class="nav-btn flex-1 py-3 flex flex-col items-center gap-1 text-gray-500" data-page="recomendador">
+                <i class="fa fa-magic text-lg"></i>
+                <span class="text-xs">Recomendar</span>
+            </button>
+            <button class="nav-btn flex-1 py-3 flex flex-col items-center gap-1 text-gray-500" data-page="favoritos">
+                <i class="fa fa-heart text-lg"></i>
+                <span class="text-xs">Favoritos</span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Banner Instalar App -->
+    <div id="install-banner" class="install-banner fixed bottom-20 left-3 right-3 glass rounded-2xl p-4 z-50 card-shadow">
+        <div class="flex justify-between items-start">
+            <div>
+                <p class="font-medium text-sm">📲 Instalar Floriografía en tu pantalla de inicio</p>
+                <p class="text-xs text-gray-500 mt-1" id="instruccion-instalacion">Disfrútala como aplicación nativa</p>
+            </div>
+            <button id="cerrar-banner" class="text-gray-400 hover:text-gray-600">
+                <i class="fa fa-times"></i>
+            </button>
+        </div>
+        <button id="btn-instalar" class="mt-3 w-full py-2 bg-sage text-white rounded-xl text-sm font-medium">
+            Añadir a pantalla de inicio
+        </button>
+    </div>
+
+    <script>
+        // ✅ Registro del Service Worker
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                    .then(registro => {
+                        console.log('Service Worker registrado ✅', registro.scope);
+                    })
+                    .catch(error => {
+                        console.log('Error al registrar Service Worker ❌', error);
+                    });
+            });
+        }
+
+        // ==============================================
+        // BASE DE DATOS DE FLORES
+        // ==============================================
+        const flores = [
+            {
+                id: 1,
+                nombre: "Rosa",
+                cientifico: "Rosa spp.",
+                categorias: ["Amor", "Agradecimiento", "Pasión"],
+                significado: "Es la flor universal del amor. Representa la perfección, la pasión y la belleza en su forma más pura.",
+                porColor: [
+                    { color: "Roja", significado: "Amor profundo y pasión ardiente." },
+                    { color: "Blanca", significado: "Pureza, inocencia y amor sagrado." },
+                    { color: "Amarilla", significado: "Amistad, alegría y energía positiva." },
+                    { color: "Rosa", significado: "Dulzura, gratitud y admiración." },
+                    { color: "Naranja", significado: "Entusiasmo, deseo y admiración." }
+                ],
+                historia: "Su fama se remonta a la antigüedad. Los griegos la asociaban con Afrodita, diosa del amor, y los romanos la usaban en celebraciones. En la Edad Media, su significado se codificó en lo que llamamos floriografía.",
+                ocasion: "Aniversarios, declaraciones de amor, Día de San Valentín, pedidas de mano y agradecimientos especiales.",
+                cuidados: "Luz: abundante, al menos 6 horas diarias. Riego: mantener el suelo húmedo sin encharcar; regar por la base. En flor cortada: cambiar el agua cada dos días y recortar los tallos en diagonal.",
+                emociones: ["amor", "pasión", "admiración"]
+            },
+            {
+                id: 2,
+                nombre: "Girasol",
+                cientifico: "Helianthus annuus",
+                categorias: ["Amistad", "Nacimiento", "Felicidad"],
+                significado: "Simboliza la alegría, la vitalidad y la lealtad. Siempre mira hacia la luz, representando la fe y la esperanza.",
+                porColor: [
+                    { color: "Amarillo dorado", significado: "Energía, felicidad y admiración radiante." }
+                ],
+                historia: "Su nombre viene del mito griego donde una ninfa se enamoró del sol y se transformó en esta flor. Originario de América, fue cultivado por pueblos indígenas mucho antes de la llegada de los europeos.",
+                ocasion: "Cumpleaños, comienzos nuevos, alegrar un espacio, regalar a amigos y personas que iluminan tu vida.",
+                cuidados: "Luz: pleno sol, cuanto más mejor. Riego: moderado, profundamente cuando la tierra esté seca. Suelo bien drenado.",
+                emociones: ["amistad", "felicidad", "admiracion"]
+            },
+            {
+                id: 3,
+                nombre: "Lirio",
+                cientifico: "Lilium spp.",
+                categorias: ["Espiritualidad", "Condolencias", "Nacimiento"],
+                significado: "Representa la pureza del alma, la renovación y la nobleza. Es una flor cargada de simbolismo espiritual.",
+                porColor: [
+                    { color: "Blanco", significado: "Pureza, virginidad y devoción; muy usado en ceremonias religiosas." },
+                    { color: "Amarillo", significado: "Felicidad y gratitud, aunque en algunas culturas puede significar falsedad." },
+                    { color: "Rosa", significado: "Júbilo y riqueza, admiración tierna." },
+                    { color: "Naranja", significado: "Pasión, confianza y calidez." }
+                ],
+                historia: "Es una de las flores más veneradas de la historia. Aparece en la mitología, la Biblia y la heráldica. En la antigüedad se creía que surgió de la leche de Hera, reina de los dioses griegos.",
+                ocasion: "Bautizos, bodas, homenajes, momentos de consuelo y celebraciones espirituales.",
+                cuidados: "Luz: brillante pero sin sol directo intenso. Riego: mantener humedad constante. En flor cortada: retirar estambres para alargar su duración y evitar manchas de polen.",
+                emociones: ["consuelo", "admiracion", "agradecimiento"]
+            },
+            {
+                id: 4,
+                nombre: "Margarita",
+                cientifico: "Bellis perennis",
+                categorias: ["Amistad", "Nacimiento", "Inocencia"],
+                significado: "La flor de la inocencia y la pureza sencilla. Significa 'te quiero mucho' y la confianza incondicional.",
+                porColor: [
+                    { color: "Blanco con centro amarillo", significado: "Inocencia, lealtad y amor puro sin condiciones." }
+                ],
+                historia: "Su nombre proviene de la palabra latina 'bellus' que significa 'hermosa'. Se ha asociado a la juventud y la sencillez desde la Edad Media; se decía que regalar margaritas era desear felicidad sincera.",
+                ocasion: "Regalos espontáneos, amistad, nacimientos, demostrar afecto sencillo y puro.",
+                cuidados: "Luz: sol moderado. Riego: ligero, no soporta encharcamientos. Resiste bien a climas frescos.",
+                emociones: ["amistad", "perdon", "felicidad"]
+            },
+            {
+                id: 5,
+                nombre: "Orquídea",
+                cientifico: "Orchidaceae",
+                categorias: ["Espiritualidad", "Amor", "Admiración"],
+                significado: "Representa la belleza exótica, la fuerza y la elegancia. Simboliza el amor refinado y la armonía.",
+                porColor: [
+                    { color: "Morada", significado: "Respeto, dignidad y admiración profunda." },
+                    { color: "Blanca", significado: "Elegancia, inocencia y belleza refinada." },
+                    { color: "Rosa", significado: "Feminidad, gracia y amor tierno." },
+                    { color: "Amarilla", significado: "Amistad, nuevos comienzos y alegría." }
+                ],
+                historia: "Admirada desde la antigüedad en China y Grecia. Durante siglos fue objeto de deseo y coleccionismo en Europa. En muchas culturas asiáticas representa la perfección espiritual.",
+                ocasion: "Agradecimientos distinguidos, regalos elegantes, celebraciones especiales y reconocimiento a alguien admirable.",
+                cuidados: "Luz: brillante pero indirecta. Riego: cada 7-10 días, sin mojar las hojas; usar agua sin cal. Necesita humedad ambiental.",
+                emociones: ["admiracion", "amor", "agradecimiento"]
+            },
+            {
+                id: 6,
+                nombre: "Clavel",
+                cientifico: "Dianthus caryophyllus",
+                categorias: ["Amor", "Agradecimiento", "Condolencias"],
+                significado: "La flor de los sentimientos profundos y duraderos. Representa el afecto firme, la gratitud y la valentía.",
+                porColor: [
+                    { color: "Rojo", significado: "Admiración y amor que perdura." },
+                    { color: "Rosa", significado: "Amor maternal y ternura eterna." },
+                    { color: "Blanco", significado: "Amor puro y buena suerte." },
+                    { color: "Amarillo", significado: "Desprecio o rechazo en algunas tradiciones; en otras, alegría compartida." }
+                ],
+                historia: "Su nombre significa 'flor de los dioses'. Ha sido cultivado durante más de 2.000 años. En el siglo XIX se convirtió en símbolo del amor maternal y en emblema de movimientos sociales en varios países.",
+                ocasion: "Día de la Madre, homenajes, aniversarios largos y agradecimientos sinceros.",
+                cuidados: "Luz: sol directo o semisombra luminosa. Riego: en la base, sin mojar hojas. En flor cortada: quitar hojas sumergidas en el agua para evitar descomposición.",
+                emociones: ["agradecimiento", "admiracion", "amor"]
+            },
+            {
+                id: 7,
+                nombre: "Tulipán",
+                cientifico: "Tulipa spp.",
+                categorias: ["Amor", "Nacimiento", "Felicidad"],
+                significado: "Anuncia la llegada de la primavera y el renacimiento. Representa el amor perfecto y la felicidad genuina.",
+                porColor: [
+                    { color: "Rojo", significado: "Declaración de amor perfecto." },
+                    { color: "Blanco", significado: "Perdón y devoción." },
+                    { color: "Amarillo", significado: "Esperanza y felicidad radiante." },
+                    { color: "Rosa", significado: "Amor que florece y tierna admiración." },
+                    { color: "Morado", significado: "Realeza y respeto digno." }
+                ],
+                historia: "Originario de Asia Central, llegó a Europa a través de Turquía en el siglo XVI. En los Países Bajos generó una fiebre económica conocida como 'tulipomanía'. Es símbolo de renovación en muchas culturas.",
+                ocasion: "Primavera, comienzos de relación, nacimientos, pedir perdón y celebrar la vida.",
+                cuidados: "Luz: sol o semisombra luminosa. Riego: moderado, no excesivo. En flor cortada: recortar tallos a menudo y mantener en lugar fresco.",
+                emociones: ["amor", "perdon", "felicidad"]
+            },
+            {
+                id: 8,
+                nombre: "Jazmín",
+                cientifico: "Jasminum spp.",
+                categorias: ["Espiritualidad", "Amor", "Paz"],
+                significado: "Simboliza la dulzura, la pureza y la elegancia humilde. Su fragancia nocturna representa la belleza que brilla en la calma.",
+                porColor: [
+                    { color: "Blanco", significado: "Amor sagrado, pureza y atracción espiritual." },
+                    { color: "Amarillo", significado: "Gracia y elegancia sutil." }
+                ],
+                historia: "Originario de Asia, se ha cultivado milenios por su aroma. En la India se asocia a la divinidad y se usa en ceremonias. En Persia era símbolo de amor eterno.",
+                ocasion: "Ambientar espacios, regalos románticos, celebraciones espirituales y momentos de paz.",
+                cuidados: "Luz: brillante. Riego: mantener humedad en crecimiento, reducir en reposo. Aprecia la humedad ambiental.",
+                emociones: ["consuelo", "amor", "paz"]
+            },
+            {
+                id: 9,
+                nombre: "Amapola",
+                cientifico: "Papaver rhoeas",
+                categorias: ["Condolencias", "Espiritualidad", "Recuerdo"],
+                significado: "Representa el sueño eterno, el recuerdo de quienes partieron y también la resurrección y la esperanza tras la pérdida.",
+                porColor: [
+                    { color: "Roja", significado: "Recuerdo respetuoso y gratitud eterna a los caídos." },
+                    { color: "Blanca", significado: "Paz eterna y descanso del alma." }
+                ],
+                historia: "Asociada al sueño y la muerte dulce desde la antigüedad griega. Tras la Primera Guerra Mundial se convirtió en emblema mundial del recuerdo de los caídos.",
+                ocasion: "Homenajes, ofrendas conmemorativas y momentos de reflexión y consuelo.",
+                cuidados: "Luz: pleno sol. Riego: escaso, se adapta a suelos pobres y secos. Florece en campos abiertos y soleados.",
+                emociones: ["consuelo", "paz"]
+            },
+            {
+                id: 10,
+                nombre: "Lavanda",
+                cientifico: "Lavandula spp.",
+                categorias: ["Espiritualidad", "Paz", "Amistad"],
+                significado: "Purificación, calma y serenidad. Aleja lo negativo y atrae tranquilidad y confianza.",
+                porColor: [
+                    { color: "Violeta/azul", significado: "Paz mental, limpieza espiritual y protección." }
+                ],
+                historia: "Los romanos la usaban en baños y rituales de limpieza. Su nombre viene del latín 'lavare' (lavar). Se ha usado para proteger hogares y atraer buenas energías.",
+                ocasion: "Regalos de bienestar, mudanzas, momentos de estrés y agradecimientos reconfortantes.",
+                cuidados: "Luz: sol total. Riego: muy escaso, odia el encharcamiento. Necesita suelo muy drenado.",
+                emociones: ["paz", "agradecimiento", "amistad"]
+            }
+        ];
+
+        let favoritos = JSON.parse(localStorage.getItem('floriografia_favoritos') || '[]');
+        let florActivaId = null;
+        let filtroActivo = 'todas';
+        let deferredPrompt;
+
+        const buscador = document.getElementById('buscador');
+        const listaFlores = document.getElementById('lista-flores');
+        const sinResultados = document.getElementById('sin-resultados');
+        const filtrosContenedor = document.getElementById('filtros-contenedor');
+        const modal = document.getElementById('modal-flor');
+        const recomendadorForm = {
+            destino: document.getElementById('destinatario'),
+            emocion: document.getElementById('emocion'),
+            boton: document.getElementById('btn-recomendar'),
+            resultados: document.getElementById('resultados-recomendacion')
+        };
+        const listaFavoritos = document.getElementById('lista-favoritos');
+        const sinFavoritos = document.getElementById('sin-favoritos');
+        const installBanner = document.getElementById('install-banner');
+        const btnInstalar = document.getElementById('btn-instalar');
+
+        function generarTarjetaFlor(flor) {
+            const esFavorito = favoritos.includes(flor.id);
+            return `
+                <div class="flor-card glass rounded-2xl p-4 card-shadow border border-white/60 cursor-pointer" data-id="${flor.id}">
+                    <div class="flex justify-between items-start mb-2">
+                        <div>
+                            <h3 class="font-serif font-bold text-lg text-sage">${flor.nombre}</h3>
+                            <p class="text-xs text-gray-500 italic">${flor.cientifico}</p>
+                        </div>
+                        <button class="corazon-btn heart-icon text-lg ${esFavorito ? 'saved' : 'text-gray-300'}" data-id="${flor.id}">
+                            <i class="fa ${esFavorito ? 'fa-heart' : 'fa-heart-o'}"></i>
+                        </button>
+                    </div>
+                    <p class="text-sm text-gray-600 line-clamp-2 mb-3">${flor.significado.substring(0, 70)}...</p>
+                    <div class="flex flex-wrap gap-1.5">
+                        ${flor.categorias.slice(0, 2).map(cat => 
+                            `<span class="text-xs px-2 py-0.5 bg-sageLight/30 text-sage rounded-full">${cat}</span>`
+                        ).join('')}
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderizarCatalogo() {
+            const termino = buscador.value.trim().toLowerCase();
+            let resultados = flores.filter(flor => {
+                const coincideBusqueda = !termino || 
+                    flor.nombre.toLowerCase().includes(termino) ||
+                    flor.significado.toLowerCase().includes(termino) ||
+                    flor.porColor.some(c => c.significado.toLowerCase().includes(termino)) ||
+                    flor.ocasion.toLowerCase().includes(termino) ||
+                    flor.emociones.some(e => e.includes(termino));
+                const coincideFiltro = filtroActivo === 'todas' || flor.categorias.includes(filtroActivo);
+                return coincideBusqueda && coincideFiltro;
+            });
+
+            if (resultados.length === 0) {
+                listaFlores.innerHTML = '';
+                sinResultados.classList.remove('hidden');
+                return;
+            }
+            sinResultados.classList.add('hidden');
+            listaFlores.innerHTML = resultados.sort((a, b) => a.nombre.localeCompare(b.nombre)).map(f => generarTarjetaFlor(f)).join('');
+        }
+
+        function renderizarFavoritos() {
+            const floresGuardadas = flores.filter(f => favoritos.includes(f.id));
+            if (floresGuardadas.length === 0) {
+                listaFavoritos.innerHTML = '';
+                sinFavoritos.classList.remove('hidden');
+                return;
+            }
+            sinFavoritos.classList.add('hidden');
+            listaFavoritos.innerHTML = floresGuardadas.sort((a, b) => a.nombre.localeCompare(b.nombre)).map(f => generarTarjetaFlor(f)).join('');
+        }
+
+        function abrirModal(idFlor) {
+            const flor = flores.find(f => f.id === idFlor);
+            if (!flor) return;
+            florActivaId = idFlor;
+            document.getElementById('modal-nombre').textContent = flor.nombre;
+            document.getElementById('modal-cientifico').textContent = flor.cientifico;
+            document.getElementById('modal-significado').textContent = flor.significado;
+            document.getElementById('modal-historia').textContent = flor.historia;
+            document.getElementById('modal-ocasion').textContent = flor.ocasion;
+            document.getElementById('modal-cuidados').textContent = flor.cuidados;
+            document.getElementById('modal-colores').innerHTML = flor.porColor.map(c => `<li><strong>${c.color}:</strong> ${c.significado}</li>`).join('');
+            actualizarBotonFavorito();
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function cerrarModal() {
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+            florActivaId = null;
+        }
+
+        function actualizarBotonFavorito() {
+            const btn = document.getElementById('favorito-modal');
+            const esFav = favoritos.includes(florActivaId);
+            if (esFav) {
+                btn.innerHTML = '<i class="fa fa-heart mr-2 text-terracota"></i> Quitar de favoritos';
+                btn.classList.add('bg-terracota/10', 'text-terracota');
+                btn.classList.remove('border-sage/30', 'text-sage', 'hover:bg-sage/10');
+            } else {
+                btn.innerHTML = '<i class="fa fa-heart-o mr-2"></i> Agregar a favoritos';
+                btn.classList.remove('bg-terracota/10', 'text-terracota');
+                btn.classList.add('border-sage/30', 'text-sage', 'hover:bg-sage/10');
+            }
+        }
+
+        function toggleFavorito(id) {
+            const indice = favoritos.indexOf(id);
+            if (indice === -1) favoritos.push(id);
+            else favoritos.splice(indice, 1);
+            localStorage.setItem('floriografia_favoritos', JSON.stringify(favoritos));
+            renderizarCatalogo();
+            renderizarFavoritos();
+            if (florActivaId === id) actualizarBotonFavorito();
+        }
+
+        function recomendar() {
+            const emocion = recomendadorForm.emocion.value;
+            if (!emocion) {
+                recomendadorForm.resultados.innerHTML = `<p class="text-center text-gray-500 py-6">Selecciona una emoción para recibir recomendaciones 🌸</p>`;
+                return;
+            }
+            let candidatas = flores.filter(f => f.emociones.includes(emocion));
+            if (candidatas.length < 3) {
+                const categoriasRelacionadas = {
+                    'amor': ['Amor'], 'amistad': ['Amistad'], 'agradecimiento': ['Agradecimiento'],
+                    'consuelo': ['Condolencias', 'Espiritualidad'], 'admiracion': ['Agradecimiento', 'Amistad'],
+                    'felicidad': ['Nacimiento', 'Felicidad'], 'perdon': ['Paz', 'Amor']
+                };
+                const cats = categoriasRelacionadas[emocion] || [];
+                flores.forEach(f => {
+                    if (!candidatas.includes(f) && f.categorias.some(c => cats.includes(c))) candidatas.push(f);
+                });
+            }
+            const seleccionadas = candidatas.slice(0, 3);
+            if (seleccionadas.length === 0) {
+                recomendadorForm.resultados.innerHTML = `<p class="text-center text-gray-500 py-6">No encontré flores específicas para esa combinación 💐</p>`;
+                return;
+            }
+            recomendadorForm.resultados.innerHTML = `
+                <h3 class="font-serif text-lg font-semibold text-sage mb-3">🌸 Las flores ideales para ti</h3>
+                ${seleccionadas.map((flor, i) => `
+                    <div class="glass rounded-2xl p-4 card-shadow border border-white/60">
+                        <div class="flex items-start gap-3">
+                            <span class="w-8 h-8 rounded-full bg-terracota text-white flex items-center justify-center font-bold">${i+1}</span>
+                            <div>
+                                <h4 class="font-bold text-sage">${flor.nombre}</h4>
+                                <p class="text-xs text-gray-500 italic mb-2">${flor.cientifico}</p>
+                                <p class="text-sm text-gray-700">${flor.significado}</p>
+                                <button class="mt-2 text-sm text-terracota hover:underline ver-detalle-btn" data-id="${flor.id}">Ver detalles →</button>
+                            </div>
+                        </div>
+                    </div>
+                `).join('')}
+            `;
+        }
+
+        function cambiarPagina(nombrePagina) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.getElementById(`page-${nombrePagina}`).classList.add('active');
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.dataset.page === nombrePagina 
+                    ? (btn.classList.add('nav-active'), btn.classList.remove('text-gray-500'))
+                    : (btn.classList.remove('nav-active'), btn.classList.add('text-gray-500'));
+            });
+            const subtitulos = {
+                catalogo: 'El lenguaje secreto de las flores',
+                recomendador: 'Encuentra la flor perfecta 💐',
+                favoritos: 'Tus flores guardadas ❤️'
+            };
+            document.getElementById('page-subtitle').textContent = subtitulos[nombrePagina] || '';
+            if (nombrePagina === 'favoritos') renderizarFavoritos();
+        }
+
+        function mostrarBannerInstalacion() {
+            const esApp = (window.matchMedia('(display-mode: standalone)').matches) || (window.navigator.standalone === true);
+            if (esApp) return;
+            const esiOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+            const instruccion = document.getElementById('instruccion-instalacion');
+            if (esiOS) {
+                instruccion.innerHTML = 'Toca <strong>Compartir</strong> → <strong>Añadir a pantalla de inicio</strong>';
+            } else {
+                instruccion.innerHTML = 'Toca el botón de abajo para instalarla';
+            }
+            setTimeout(() => installBanner.classList.add('show'), 2000);
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            buscador.addEventListener('input', renderizarCatalogo);
+            filtrosContenedor.addEventListener('click', e => {
+                if (e.target.classList.contains('chip')) {
+                    filtroActivo = e.target.dataset.categoria;
+                    document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+                    e.target.classList.add('active');
+                    renderizarCatalogo();
+                }
+            });
+            listaFlores.addEventListener('click', e => {
+                const corazon = e.target.closest('.corazon-btn');
+                if (corazon) { e.stopPropagation(); toggleFavorito(parseInt(corazon.dataset.id)); return; }
+                const tarjeta = e.target.closest('.flor-card');
+                if (tarjeta) abrirModal(parseInt(tarjeta.dataset.id));
+            });
+            listaFavoritos.addEventListener('click', e => {
+                const corazon = e.target.closest('.corazon-btn');
+                if (corazon) { e.stopPropagation(); toggleFavorito(parseInt(corazon.dataset.id)); return; }
+                const tarjeta = e.target.closest('.flor-card');
+                if (tarjeta) abrirModal(parseInt(tarjeta.dataset.id));
+            });
+            document.getElementById('cerrar-modal').addEventListener('click', cerrarModal);
+            modal.addEventListener('click', e => { if (e.target === modal) cerrarModal(); });
+            document.getElementById('favorito-modal').addEventListener('click', () => toggleFavorito(florActivaId));
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.addEventListener('click', () => cambiarPagina(btn.dataset.page));
+            });
+            recomendadorForm.boton.addEventListener('click', recomendar);
+            recomendadorForm.resultados.addEventListener('click', e => {
+                if (e.target.classList.contains('ver-detalle-btn')) abrirModal(parseInt(e.target.dataset.id));
+            });
+            document.getElementById('cerrar-banner').addEventListener('click', () => installBanner.classList.remove('show'));
+            btnInstalar.addEventListener('click', () => {
+                const esiOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+                if (esiOS) {
+                    alert('📲 En iPhone:\n1. Toca el icono de Compartir ⬆️\n2. Selecciona "Añadir a pantalla de inicio"\n3. Confirma con "Añadir"');
+                } else if (deferredPrompt) {
+                    deferredPrompt.prompt();
+                    deferredPrompt.userChoice.then(result => {
+                        if (result.outcome === 'accepted') console.log('App instalada ✅');
+                        deferredPrompt = null;
+                    });
+                } else {
+                    alert('📲 En Android:\nToca el menú ⋮ arriba y selecciona "Instalar aplicación"');
+                }
+                installBanner.classList.remove('show');
+            });
+            window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); deferredPrompt = e; });
+            
+            renderizarCatalogo();
+            mostrarBannerInstalacion();
+            filtrosContenedor.querySelector('[data-categoria="todas"]').classList.add('active');
+        });
+    </script>
+</body>
+</html>
